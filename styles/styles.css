@@ -1,0 +1,107 @@
+body {
+    background-color: rgb(204, 143, 181);
+}
+
+.common {
+    background-color: rgb(144, 182, 144);
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+h2 {
+    color: white;
+    text-align: center;
+    font-style: italic;
+}
+
+p {
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.header {
+    position: absolute;
+    top: 5px;
+    left: 15px;
+    right: 25px;
+    height: 100px;
+    z-index: 1;
+    text-align: center;
+    font-style: italic;
+    font-size: larger;
+    background-color: rgb(144, 182, 144);
+
+}
+
+.right .underline {
+    text-decoration: underline;
+
+}
+
+.right {
+    position: absolute;
+    top: 130px;
+    right: 25px;
+    width: 120px;
+    font-weight: bold;
+    bottom: 40px;
+    background-color: rgb(144, 182, 144);
+
+}
+
+.left .underline {
+    text-decoration: underline;
+
+}
+
+
+img {
+    display: block;
+    /* makes the image a block element */
+    margin-left: auto;
+    /* auto margin on left */
+    margin-right: auto;
+    /* auto margin on right */
+    max-width: 100%;
+    /* keeps it responsive */
+    height: auto;
+    /* maintains aspect ratio */
+}
+.left {
+    position: absolute;
+    top: 130px;
+    left: 15px;
+    width: 120px;
+    bottom: 40px;
+    font-weight: bold;
+    background-color: rgb(144, 182, 144);
+
+}
+
+.footer {
+    bottom: 5px;
+    height: 25px;
+    left: 15px;
+    right: 25px;
+    position: fixed;
+    z-index: 10000;
+}
+
+.video {
+    display: block;
+    margin: 0 auto;
+}
+
+
+.main {
+    position: absolute;
+    top: 130px;
+    left: 160px;
+    right: 160px;
+    background-color: rgb(144, 182, 144);
+
+
+}

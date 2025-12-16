@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>flappyoz.com</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #ffd6e8;
+    font-family: "Segoe UI", sans-serif;
+    text-align: center;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  h1 {
+    font-family: "Lucida Handwriting", cursive;
+    color: #2f4f4f;
+    margin-top: 20px;
+    text-shadow: 0 0 10px #ffb3d9;
+  }
+
+  #instructions {
+    font-family: "Times New Roman", serif;
+    font-style: italic;
+    margin-top: 5px;
+    color: #2f4f4f;
+  }
+
+  #gameCanvas {
+    background: #ffd6e8;
+    display: none;
+    margin: 20px auto;
+    border: 3px solid #2f4f4f;
+    border-radius: 10px;
+  }
+
+  button {
+    padding: 12px 20px;
+    margin: 10px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: #4b6f4b;
+    color: white;
+    font-family: "Times New Roman", serif;
+    font-style: italic;
+    box-shadow: 0 0 10px #00ff99;
+  }
+
+  button:hover { background: #2f4f4f; }
+
+  .character-select,
+  .difficulty-select {
+    margin-top: 15px;
+    display: none;
+  }
+
+  .difficulty-select p {
+    margin: 5px 0 10px 0;
+    font-family: "Times New Roman", serif;
+    font-style: italic;
+    color: #2f4f4f;
+  }
+
+  #score {
+    position: absolute;
+    top: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Lucida Handwriting", cursive;
+    font-size: 32px;
+    color: #2f4f4f;
+    text-shadow: 0 0 10px #ffb3d9;
+    display: none;
+  }
+
+  #highScore {
+    position: absolute;
+    top: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Lucida Handwriting", cursive;
+    font-size: 22px;
+    color: #2f4f4f;
+    text-shadow: 0 0 10px #ffb3d9;
+    display: none;
+  }
+
+  .highscore-glow {
+    color: #d4af37 !important;
+    text-shadow:
+      0 0 10px #ffd700,
+      0 0 20px #ffea8a,
+      0 0 30px #fff3b0;
+    transition: all 0.4s ease;
+  }
+
+  #newRecord {
+    position: absolute;
+    top: 190px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: "Lucida Handwriting", cursive;
+    font-size: 26px;
+    color: #d4af37;
+    text-shadow: 0 0 10px #ffd700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  @keyframes sparkle {
+    0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+    50% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 0; }
+  }
+
+  #gameOverBox {
+    display: none;
+    position: absolute;
+    top: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    padding: 20px;
+    border-radius: 15px;
+    background: linear-gradient(to right, #0a5 50%, #ffd6e8 50%);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    border: 3px solid #2f4f4f;
+    color: #2f4f4f;
+    font-family: "Lucida Handwriting", cursive;
+    text-align: center;
+    z-index: 5;
+  }
+
+  .bubble-box {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 360px;
+    padding: 25px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 20% 20%, #ffe6f4, #ffb3d9);
+    border: 2px solid #ffc9e6;
+    color: #2f4f4f;
+    font-family: "Times New Roman", serif;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(255,182,193,0.9);
+  }
+
+  #welcomePopup { top: 60px; display: block; z-index: 10; }
+  #objectiveBubble { top: 260px; display: none; z-index: 9; }
+</style>
+</head>
+<body>
+
+<h1>Wicked Flappy Bird — Emerald City Edition</h1>
+<p id="instructions">Press SPACE to fly — but first, read the intro!</p>
+
+<!-- Welcome Popup -->
+<div id="welcomePopup" class="bubble-box">
+  <h2>Welcome to Wicked Flappy Bird — Emerald City Edition!</h2>
+  <p>Your journey through Oz begins now.</p>
+  <p>Avoid obstacles and collect Spell Books for <b>+5 bonus points</b>.</p>
+  <button onclick="closeWelcome()">Got it — Let’s Play!</button>
+</div>
+
+<!-- Objective Bubble -->
+<div id="objectiveBubble" class="bubble-box">
+  <p><b>Objective:</b> Avoid all obstacles and collect Spell Books!</p>
+  <button onclick="closeObjective()">Choose Your Character</button>
+</div>
+
+<!-- Character Select -->
+<div class="character-select" id="characterSelect">
+  <button onclick="selectCharacter('elphaba')">Elphaba</button>
+  <button onclick="selectCharacter('glinda')">Glinda</button>
+  <button onclick="selectCharacter('monkey')">Flying Monkey</button>
+</div>
+
+<!-- Difficulty Select -->
+<div class="difficulty-select" id="difficultySelect">
+  <p>Choose your difficulty:</p>
+  <button onclick="startGameWithDifficulty('easy')">Easy</button>
+  <button onclick="startGameWithDifficulty('normal')">Normal</button>
+  <button onclick="startGameWithDifficulty('wicked')">Wicked</button>
+</div>
+
+<!-- Score + High Score + NEW RECORD -->
+<div id="score">0</div>
+<div id="highScore">High Score: 0</div>
+<div id="newRecord">NEW RECORD!</div>
+
+<!-- Game Canvas -->
+<canvas id="gameCanvas" width="400" height="500"></canvas>
+
+<!-- Game Over Box -->
+<div id="gameOverBox">
+  <h2>You Crashed!</h2>
+  <button onclick="restartSameCharacter()">Play Again</button>
+  <button onclick="showCharacterSelect()">Choose New Character</button>
+</div>
+<script>
+let canvas, ctx;
+let player = { x: 80, y: 300, size: 20, dy: 0, character: "elphaba", anim: 0 };
+let obstacles = [];
+let spellBook = null;
+let gameRunning = false;
+let gravity = 0.4;
+let jumpStrength = -7;
+let score = 0;
+let currentDifficulty = "easy";
+let skylineOffset = 0;
+
+/* High score */
+let highScore = localStorage.getItem("wickedHighScore")
+  ? parseInt(localStorage.getItem("wickedHighScore"))
+  : 0;
+
+/* Difficulty settings (original) */
+const difficultySettings = {
+  easy:   { speed: 2,   spawn: 1800, floatMinH: 30, floatMaxH: 70, pipeMinH: 40,  pipeMaxH: 90  },
+  normal: { speed: 2.6, spawn: 1500, floatMinH: 40, floatMaxH: 90, pipeMinH: 60,  pipeMaxH: 120 },
+  wicked: { speed: 2.7, spawn: 1600, floatMinH: 45, floatMaxH: 95, pipeMinH: 60, pipeMaxH: 120 }
+};
+
+/* Popups */
+function closeWelcome() {
+  document.getElementById("welcomePopup").style.display = "none";
+  document.getElementById("objectiveBubble").style.display = "block";
+}
+
+function closeObjective() {
+  document.getElementById("objectiveBubble").style.display = "none";
+  document.getElementById("characterSelect").style.display = "block";
+}
+
+/* Character selection */
+function selectCharacter(charName) {
+  player.character = charName;
+  document.getElementById("characterSelect").style.display = "none";
+  document.getElementById("difficultySelect").style.display = "block";
+}
+
+/* Difficulty selection */
+function startGameWithDifficulty(diff) {
+  currentDifficulty = diff;
+  document.getElementById("difficultySelect").style.display = "none";
+  startGame();
+}
+
+/* Start game */
+function startGame() {
+  canvas = document.getElementById("gameCanvas");
+  ctx = canvas.getContext("2d");
+  canvas.style.display = "block";
+
+  document.getElementById("instructions").style.display = "none";
+  document.getElementById("gameOverBox").style.display = "none";
+  document.getElementById("score").style.display = "block";
+  document.getElementById("highScore").style.display = "block";
+
+  score = 0;
+  document.getElementById("score").innerText = score;
+  document.getElementById("highScore").innerText = "High Score: " + highScore;
+
+  obstacles = [];
+  spellBook = null;
+  player.y = 300;
+  player.dy = 0;
+  gameRunning = true;
+
+  spawnObstacles();
+  scheduleSpellBook();
+  requestAnimationFrame(update);
+}
+
+/* Restart */
+function restartSameCharacter() {
+  document.getElementById("gameOverBox").style.display = "none";
+  startGame();
+}
+
+/* Back to character select */
+function showCharacterSelect() {
+  document.getElementById("gameOverBox").style.display = "none";
+  document.getElementById("characterSelect").style.display = "block";
+}
+
+/* Skyline */
+function drawEmeraldCity() {
+  ctx.save();
+  ctx.fillStyle = "#6cc4a1";
+  ctx.shadowColor = "#6cc4a1";
+  ctx.shadowBlur = 10;
+
+  skylineOffset -= 0.5;
+  if (skylineOffset <= -50) skylineOffset = 0;
+
+  for (let i = 0; i < 12; i++) {
+    let x = i * 50 + skylineOffset;
+    let h = 120 + (i % 4) * 40;
+    ctx.fillRect(x, canvas.height - h, 40, h);
+
+    ctx.fillStyle = "#e8fff5";
+    for (let w = 0; w < 5; w++) {
+      ctx.fillRect(x + 10, canvas.height - h + 10 + w * 20, 10, 10);
+    }
+    ctx.fillStyle = "#6cc4a1";
+  }
+  ctx.restore();
+}
+
+/* Draw player */
+function drawPlayer() {
+  ctx.save();
+  player.anim += 0.1;
+
+  if (player.character === "elphaba") {
+    ctx.fillStyle = "#0a5";
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#5b3a29";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(player.x - 30, player.y + 10 + Math.sin(player.anim) * 3);
+    ctx.lineTo(player.x + 30, player.y + 10 + Math.sin(player.anim) * 3);
+    ctx.stroke();
+
+  } else if (player.character === "glinda") {
+    ctx.fillStyle = "rgba(255,182,193,0.4)";
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size + 12 + Math.sin(player.anim) * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ff69b4";
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+    ctx.fill();
+
+  } else if (player.character === "monkey") {
+    ctx.fillStyle = "#5c4033";
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#3b2a20";
+    let wingOffset = Math.sin(player.anim) * 10;
+
+    ctx.beginPath();
+    ctx.moveTo(player.x - 25, player.y);
+    ctx.lineTo(player.x - 5, player.y - 20 + wingOffset);
+    ctx.lineTo(player.x - 5, player.y + 20 - wingOffset);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(player.x + 25, player.y);
+    ctx.lineTo(player.x + 5, player.y - 20 + wingOffset);
+    ctx.lineTo(player.x + 5, player.y + 20 - wingOffset);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+/* ------------------ RESTORED OBSTACLE SYSTEM ------------------ */
+
+/* Floating obstacle */
+function spawnFloatingObstacle(settings) {
+  const height = Math.random() * (settings.floatMaxH - settings.floatMinH) + settings.floatMinH;
+
+  const band = Math.floor(Math.random() * 3);
+  let y;
+  if (band === 0) {
+    y = canvas.height - 180 - height + Math.random() * 15;
+  } else if (band === 1) {
+    y = canvas.height / 2 - height / 2 + (Math.random() * 60 - 30);
+  } else {
+    y = 60 + Math.random() * 80;
+  }
+
+  let typeOptions;
+  if (currentDifficulty === "easy") typeOptions = ["bubble", "crate"];
+  else if (currentDifficulty === "normal") typeOptions = ["bubble", "crate", "crystal"];
+  else typeOptions = ["crystal", "spell"];
+
+  const type = typeOptions[Math.floor(Math.random() * typeOptions.length)];
+
+  let width = 40;
+  if (type === "crate") width = 50;
+  if (type === "bubble") width = 45;
+
+  obstacles.push({
+    x: canvas.width + 20,
+    y: y,
+    width: width,
+    height: height,
+    type: type,
+    floating: true,
+    scored: false
+  });
+}
+
+/* Pipe obstacle */
+function spawnPipeObstacle(settings) {
+  const height = Math.random() * (settings.pipeMaxH - settings.pipeMinH) + settings.pipeMinH;
+  const y = canvas.height - height;
+
+  obstacles.push({
+    x: canvas.width + 20,
+    y: y,
+    width: 55,
+    height: height,
+    type: "pipe",
+    floating: false,
+    scored: false
+  });
+}
+
+/* Mixed obstacle spawner */
+function spawnObstacles() {
+  const settings = difficultySettings[currentDifficulty];
+
+  setInterval(() => {
+    if (!gameRunning) return;
+
+    const mode = Math.floor(Math.random() * 3);
+    if (mode === 0 || mode === 2) spawnFloatingObstacle(settings);
+    if (mode === 1 || mode === 2) spawnPipeObstacle(settings);
+
+  }, settings.spawn);
+}
+
+/* Draw obstacles */
+function drawObstacle(ob) {
+  ctx.save();
+
+  if (ob.type === "pipe") {
+    ctx.fillStyle = "#0a5";
+    ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+
+    ctx.fillStyle = "#0fb36b";
+    ctx.fillRect(ob.x - 3, ob.y - 10, ob.width + 6, 12);
+
+    ctx.strokeStyle = "#caffdd";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ob.x + 2, ob.y + 2, ob.width - 4, ob.height - 4);
+
+  } else if (ob.type === "crystal") {
+    const baseY = ob.y + ob.height;
+    ctx.fillStyle = "#0fb36b";
+    ctx.beginPath();
+    ctx.moveTo(ob.x + ob.width * 0.1, baseY);
+    ctx.lineTo(ob.x + ob.width * 0.3, ob.y + ob.height * 0.3);
+    ctx.lineTo(ob.x + ob.width * 0.5, ob.y);
+    ctx.lineTo(ob.x + ob.width * 0.7, ob.y + ob.height * 0.3);
+    ctx.lineTo(ob.x + ob.width * 0.9, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#caffdd";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ob.x + ob.width * 0.5, ob.y);
+    ctx.lineTo(ob.x + ob.width * 0.3, ob.y + ob.height * 0.5);
+    ctx.moveTo(ob.x + ob.width * 0.5, ob.y);
+    ctx.lineTo(ob.x + ob.width * 0.7, ob.y + ob.height * 0.5);
+    ctx.stroke();
+
+  } else if (ob.type === "bubble") {
+    const centerX = ob.x + ob.width / 2;
+    const baseY = ob.y + ob.height;
+
+    ctx.fillStyle = "rgba(255,192,203,0.7)";
+    ctx.beginPath();
+    ctx.arc(centerX - 8, baseY - ob.height * 0.3, ob.height * 0.25, 0, Math.PI * 2);
+    ctx.arc(centerX + 5, baseY - ob.height * 0.5, ob.height * 0.22, 0, Math.PI * 2);
+    ctx.arc(centerX + 12, baseY - ob.height * 0.2, ob.height * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.beginPath();
+    ctx.arc(centerX - 12, baseY - ob.height * 0.4, ob.height * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+  } else if (ob.type === "crate") {
+    ctx.fillStyle = "#7b4a2f";
+    ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+
+    ctx.strokeStyle = "#553322";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ob.x, ob.y, ob.width, ob.height);
+
+    ctx.strokeStyle = "#a96a3b";
+    ctx.beginPath();
+    ctx.moveTo(ob.x, ob.y + ob.height * 0.3);
+    ctx.lineTo(ob.x + ob.width, ob.y + ob.height * 0.3);
+    ctx.moveTo(ob.x, ob.y + ob.height * 0.6);
+    ctx.lineTo(ob.x + ob.width, ob.y + ob.height * 0.6);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#d9d9d9";
+    ctx.beginPath();
+    ctx.moveTo(ob.x + ob.width * 0.3, ob.y);
+    ctx.lineTo(ob.x + ob.width * 0.3, ob.y + ob.height);
+    ctx.moveTo(ob.x + ob.width * 0.7, ob.y);
+    ctx.lineTo(ob.x + ob.width * 0.7, ob.y + ob.height);
+    ctx.stroke();
+
+  } else if (ob.type === "spell") {
+    ctx.fillStyle = "#6c4bbf";
+    ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+
+    ctx.strokeStyle = "#c9b5ff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ob.x + 2, ob.y + 2, ob.width - 4, ob.height - 4);
+
+    ctx.strokeStyle = "#f5e6ff";
+    ctx.beginPath();
+    ctx.moveTo(ob.x + ob.width * 0.3, ob.y + ob.height * 0.2);
+    ctx.lineTo(ob.x + ob.width * 0.7, ob.y + ob.height * 0.5);
+    ctx.lineTo(ob.x + ob.width * 0.3, ob.y + ob.height * 0.8);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+/* ------------------ SPELL BOOK ------------------ */
+
+function scheduleSpellBook() {
+  setInterval(() => {
+    if (!gameRunning) return;
+
+    if (!spellBook) {
+      spellBook = {
+        x: canvas.width + 20,
+        y: Math.random() * 350 + 50,
+        width: 35,
+        height: 35,
+        angle: 0
+      };
+    }
+  }, 6000);
+}
+
+function drawSpellBook() {
+  if (!spellBook) return;
+
+  ctx.save();
+  spellBook.angle += 0.03;
+
+  const cx = spellBook.x + spellBook.width / 2;
+  const cy = spellBook.y + spellBook.height / 2;
+
+  ctx.translate(cx, cy);
+  ctx.rotate(spellBook.angle);
+  ctx.translate(-cx, -cy);
+
+  ctx.fillStyle = "#6c4bbf";
+  ctx.fillRect(spellBook.x, spellBook.y, spellBook.width, spellBook.height);
+
+  ctx.strokeStyle = "#c9b5ff";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(spellBook.x + 3, spellBook.y + 3, spellBook.width - 6, spellBook.height - 6);
+
+  ctx.restore();
+}
+
+/* ------------------ GAME LOOP ------------------ */
+
+function update() {
+  if (!gameRunning) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawEmeraldCity();
+
+  const settings = difficultySettings[currentDifficulty];
+
+  player.dy += gravity;
+  player.y += player.dy;
+
+  obstacles.forEach(ob => ob.x -= settings.speed);
+  if (spellBook) spellBook.x -= settings.speed;
+
+  obstacles = obstacles.filter(ob => ob.x + ob.width > 0);
+  if (spellBook && spellBook.x + spellBook.width < 0) spellBook = null;
+
+  drawPlayer();
+  obstacles.forEach(drawObstacle);
+  drawSpellBook();
+
+  /* Scoring + NEW RECORD */
+  obstacles.forEach(ob => {
+    if (!ob.scored && ob.x + ob.width < player.x) {
+      ob.scored = true;
+      score++;
+      document.getElementById("score").innerText = score;
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("wickedHighScore", highScore);
+
+        const hs = document.getElementById("highScore");
+        hs.innerText = "High Score: " + highScore;
+        hs.classList.add("highscore-glow");
+
+        const nr = document.getElementById("newRecord");
+        nr.style.opacity = 1;
+        nr.style.animation = "sparkle 1.2s ease";
+
+        setTimeout(() => {
+          nr.style.opacity = 0;
+          nr.style.animation = "";
+        }, 1200);
+      }
+    }
+  });
+
+  /* Spell Book collision */
+  if (spellBook) {
+    const closestX = Math.max(spellBook.x, Math.min(player.x, spellBook.x + spellBook.width));
+    const closestY = Math.max(spellBook.y, Math.min(player.y, spellBook.y + spellBook.height));
+    const dx = player.x - closestX;
+    const dy = player.y - closestY;
+    const distSq = dx * dx + dy * dy;
+
+    if (distSq < player.size * player.size) {
+      score += 5;
+      document.getElementById("score").innerText = score;
+
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("wickedHighScore", highScore);
+
+        const hs = document.getElementById("highScore");
+        hs.innerText = "High Score: " + highScore;
+        hs.classList.add("highscore-glow");
+
+        const nr = document.getElementById("newRecord");
+        nr.style.opacity = 1;
+        nr.style.animation = "sparkle 1.2s ease";
+
+        setTimeout(() => {
+          nr.style.opacity = 0;
+          nr.style.animation = "";
+        }, 1200);
+      }
+
+      spellBook = null;
+    }
+  }
+
+  /* Collision with obstacles */
+  for (let ob of obstacles) {
+    const cx = ob.x + ob.width / 2;
+    const cy = ob.y + ob.height / 2;
+    const dx = player.x - cx;
+    const dy = player.y - cy;
+
+    if (dx * dx + dy * dy < (player.size + ob.width / 2) ** 2) {
+      gameOver();
+      return;
+    }
+  }
+
+  /* Bounds */
+  if (player.y + player.size > canvas.height || player.y - player.size < 0) {
+    gameOver();
+    return;
+  }
+
+  requestAnimationFrame(update);
+}
+
+/* ------------------ GAME OVER ------------------ */
+
+function gameOver() {
+  gameRunning = false;
+  document.getElementById("gameOverBox").style.display = "block";
+}
+
+/* ------------------ CONTROLS ------------------ */
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && gameRunning) {
+    player.dy = jumpStrength;
+  }
+});
+</script>
+
+</body>
+</html>

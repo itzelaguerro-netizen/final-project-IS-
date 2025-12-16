@@ -1,0 +1,92 @@
+body {
+    background-color: rgb(125, 181, 125);
+}
+
+H1 {
+    color: white;
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+    font-style: italic;
+
+}
+
+.common {
+    background-color: rgb(244, 188, 244);
+   
+    position: absolute;
+
+}
+
+.header {
+    top: 5px;
+    left: 15px;
+    right: 25px;
+    height: 100px;
+    z-index: 1;
+    text-align: center;
+    font-style: italic;
+    font-size: larger;
+}
+
+.left .underline {
+    text-decoration: underline;
+}
+
+.left {
+    top: 115px;
+    left: 15px;
+    width: 100px;
+    bottom: 40px;
+    font-weight: bold;
+    /*height: fit-content;*/
+}
+
+.right .underline {
+    text-decoration: underline;
+
+}
+
+.right {
+    top: 115px;
+    right: 25px;
+    width: 100px;
+    bottom: 40px;
+    font-weight: bold;
+    /* height: fit-content; */
+
+}
+
+.footer {
+    bottom: 5px;
+    height: 25px;
+    left: 15px;
+    right: 25px;
+    position: fixed;
+    z-index: 10000;
+}
+
+
+img {
+    display: block;
+    /* makes the image a block element */
+    margin-left: auto;
+    /* auto margin on left */
+    margin-right: auto;
+    /* auto margin on right */
+    max-width: 100%;
+    /* keeps it responsive */
+    height: auto;
+    /* maintains aspect ratio */
+}
+
+
+.main {
+    top: 115px;
+    left: 130px;
+    right: 140px;
+    bottom: 40px;
+    height: fit-content;
+}
